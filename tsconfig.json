@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "baseUrl": ".",
+        "outDir": "pkg",
+        "target": "ES3",
+        "declaration": true
+    },
+    "exclude": [
+        "node_modules",
+        "pkg"
+    ],
+    "include": [
+        "src"
+    ]
+}
