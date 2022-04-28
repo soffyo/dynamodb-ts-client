@@ -43,7 +43,7 @@ export class DynamoDB<T> {
         this.DocumentClient = DynamoDBDocumentClient.from(this.DynamoDB)
     }
 
-    private async getKey(index: number): Promise<string> {
+    private async key(index: number): Promise<string> {
         const command = new DescribeTableCommand({ TableName: this.TableName })
 
         const { Table } = await this.DocumentClient.send(command)
@@ -55,7 +55,7 @@ export class DynamoDB<T> {
         const command = new GetCommand({ 
             TableName: this.TableName, 
             Key: { 
-                [await this.getKey(0)]: Key
+                [await this.key(0)]: Key
             } 
         })
 
@@ -67,7 +67,7 @@ export class DynamoDB<T> {
     async put<ItemType = T>(Item: ItemType): Promise<ItemType> {
         const command = new PutCommand({
             TableName: this.TableName,
-            ConditionExpression: `attribute_not_exists(${await this.getKey(0)})`,
+            ConditionExpression: `attribute_not_exists(${await this.key(0)})`,
             Item
         })
 
@@ -84,7 +84,7 @@ export class DynamoDB<T> {
         const command = new DeleteCommand({
             TableName: this.TableName,
             Key: {
-                [await this.getKey(0)]: Key
+                [await this.key(0)]: Key
             },
             ReturnValues: "ALL_OLD"
         })
@@ -103,9 +103,9 @@ export class DynamoDB<T> {
             ExpressionAttributeNames: generator.AttributeNames(),
             ExpressionAttributeValues: generator.AttributeValues(),
             UpdateExpression: generator.UpdateExpression(),
-            ConditionExpression: `attribute_exists(${await this.getKey(0)})`,
+            ConditionExpression: `attribute_exists(${await this.key(0)})`,
             Key: { 
-                [await this.getKey(0)]: Key
+                [await this.key(0)]: Key
             }
         })
 
@@ -131,7 +131,7 @@ export class DynamoDB<T> {
         const requests = items.map(async item => ({
             DeleteRequest: {
                 Key: {
-                    [await this.getKey(0)]: item[await this.getKey(0)]
+                    [await this.key(0)]: item[await this.key(0)]
                 }
             }
         }))
