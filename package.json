@@ -2,14 +2,10 @@
   "name": "dynamodb-ts-client",
   "version": "1.0.0",
   "description": "DynamoDB Client with Typescript support",
-  "main": "pkg/index.js",
-  "types": "pkg/index.d.ts",
-  "files": [
-    "README.md",
-    "pkg/**/*"
-  ],
+  "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "pregit": "npm run build",
     "git": "git add . && git commit -m",
     "postgit": "git push",
     "prepare": "npm run build",

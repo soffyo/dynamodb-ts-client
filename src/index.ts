@@ -27,7 +27,6 @@ interface Keys {
 interface DynamoDBArgs {
     TableName: string
     Config?: DynamoDBClientConfig
-    Keys?: Keys
 }
 
 type Output<ItemType,CommandType,OmitType extends string> = Omit<CommandType, OmitType> & {[k in OmitType]?: ItemType}
@@ -49,6 +48,17 @@ export class DynamoDB<T> {
         const { Table } = await this.DocumentClient.send(command)
 
         return Table.KeySchema[index].AttributeName
+    }
+
+    async all<ItemType = T>(Limit?: number): Promise<ItemType[]> {
+        const command = new ScanCommand({
+            TableName: this.TableName,
+            Limit
+        })
+
+        const { Items } = await this.DocumentClient.send(command) as Output<ItemType[],ScanCommandOutput,"Items">
+
+        return Items
     }
 
     async get<ItemType = T>(Key: string): Promise<ItemType> {
@@ -112,17 +122,6 @@ export class DynamoDB<T> {
         const { Attributes } = await this.DocumentClient.send(command) as Output<ItemType,UpdateCommandOutput,"Attributes">
 
         return Attributes
-    }
-
-    async all<ItemType = T>(Limit?: number): Promise<ItemType[]> {
-        const command = new ScanCommand({
-            TableName: this.TableName,
-            Limit
-        })
-
-        const { Items } = await this.DocumentClient.send(command) as Output<ItemType[],ScanCommandOutput,"Items">
-
-        return Items
     }
 
     async purge(): Promise<string> {
