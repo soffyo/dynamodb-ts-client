@@ -77,7 +77,7 @@ class UsersResolvers {
         return await this.db.all()
     }
 
-    async user(id: User["id"]): User {
+    async user(id: string): User {
         return await this.db.get(id)
     }
 
@@ -85,7 +85,7 @@ class UsersResolvers {
         return await this.db.put({ active: false, ...props })
     }
 
-    async activate(id: User["id"]): User {
+    async activate(id: string): User {
         return await this.db.update(id, { active: true })
     }
 }
