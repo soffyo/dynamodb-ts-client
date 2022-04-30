@@ -1,6 +1,6 @@
 {
   "name": "dynamodb-ts-client",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "DynamoDB Client with Typescript support",
   "main": "index.js",
   "scripts": {
