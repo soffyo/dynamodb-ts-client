@@ -2,4 +2,4 @@
 /generator
 /index.js
 /index.d.ts
-/.DS_Store
+**/*/.DS_Store
