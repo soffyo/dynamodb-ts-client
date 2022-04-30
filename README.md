@@ -10,7 +10,7 @@ npm i --save dynamodb-ts-client
 ```
 
 # API
-The idea is to pass the data schema via typescript generic arguments. Data schema can be passed to the constructor and it will propagate to all its methods but each method accepts its own generic arguments too, so you can decide which approach is better for you.
+The idea is to pass the data schema via typescript generic arguments. Data schema can be passed to the constructor and it will propagate to all its methods.
 ```ts
 import { DynamoDB } from "dynamodb-ts-client"
 
@@ -33,26 +33,27 @@ await db.initialize({
 // Retrieves all the items from the table
 await db.all()
 
-// Retrieves the item matching the Partition Key passed
-await db.get("partitionKey")
+// Retrieves the item(s) matching the Key(s) passed
+await db.get("key")
+await db.get(["key", "another key"])
 
-// Creates the item with given properties
-await db.put({ ...props })
+// Creates the item(s) with given properties
+await db.put({ ...item })
+await db.put([{ ...item }, { ...anotherItem }])
 
 // Updates the item (if existent) with the new props passed
-await db.update("partitionKey", { ...newprops })
+await db.update("key", { ...newProps })
 
-// Deletes the item matching the Partition Key passed
-await db.delete("hashKey")
+// Deletes the item(s) matching the Key(s)
+await db.delete("key")
+await db.delete(["key", "another key"])
 
 // Removes every element from the table (but not the table itself)
 await db.purge()
+
+// Completely removes the table with its content from the database
+await db.drop()
 ```
-Each method accepts its own generic argument so you can ovwerwrite what is passed to the constructor. For example:
-```ts
-await db.put<DifferentSchema>({ ...props }) 
-```
-Will be checked against `<DifferentSchema>`.
 
 # Usage example
 In this example we create a simple GraphQL class resolver. This is a typical TypeGraphQL format, with decorators omitted for improved readability.

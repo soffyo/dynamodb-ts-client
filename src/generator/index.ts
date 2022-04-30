@@ -1,43 +1,106 @@
+import { Keys } from "../index"
+
+type DynamoDBGeneratorProps = Record<string, Exclude<any,object>>
 type AttributeValue = `:_${string}_`
-type AttributeName = `#_${string}_`
 type AttributeValues = Record<AttributeValue, any>
+type AttributeName = `#_${string}_`
 type AttributeNames = Record<AttributeName, string>
 type UpdateExpression = `${AttributeName} = ${AttributeValue}`
 
-export class DynamoDBGenerator<PropsType = Record<string, Exclude<any,object>>> {
-    private readonly props: Record<string, any>
+interface KeySchema { 
+    AttributeName: string
+    KeyType: "HASH"|"RANGE"
+}
 
-    constructor(props: PropsType) {
-        this.props = props
+interface AttributeDefinitions {
+    AttributeName: string
+    AttributeType: "S"|"N"|"B"
+}
+
+interface TableDefinitions { 
+    KeySchema: KeySchema[], 
+    AttributeDefinitions: AttributeDefinitions[]
+}
+
+export class DynamoDBGenerator {
+    private readonly input: DynamoDBGeneratorProps
+
+    constructor(input?: DynamoDBGeneratorProps) {
+        if (input != undefined ) {
+            this.input = input
+        }
     }
     
     AttributeValues(): AttributeValues {
-        let AttributeValues: AttributeValues
+        if (this.input) {
+            let AttributeValues: AttributeValues
 
-        for (const [key, value] of Object.entries(this.props)) {
-            AttributeValues = { ...AttributeValues, [`:_${key}_`]: value }
+            for (const [key, value] of Object.entries(this.input)) {
+                AttributeValues = { ...AttributeValues, [`:_${key}_`]: value }
+            }
+
+            return AttributeValues
+        } else {
+            throw new Error("When using this method, you must pass props to the constructor")
         }
-
-        return AttributeValues
     }
 
     AttributeNames(): AttributeNames {
-        let AttributeNames: AttributeNames
+        if (this.input) {
+            let AttributeNames: AttributeNames
 
-        for (const key in this.props) {
-            AttributeNames = { ...AttributeNames, [`#_${key}_`]: key }
+            for (const key in this.input) {
+                AttributeNames = { ...AttributeNames, [`#_${key}_`]: key }
+            }
+            
+            return AttributeNames
+        } else {
+            throw new Error("When using this method, you must pass props to the constructor")
         }
-        
-        return AttributeNames
     }
 
     UpdateExpression(): string {
-        let Expressions: Array<UpdateExpression> = []
+        if (this.input) {
+            let Expressions: Array<UpdateExpression> = []
 
-        for (const key in this.props) {
-            Expressions.push(`#_${key}_ = :_${key}_`)
+            for (const key in this.input) {
+                Expressions.push(`#_${key}_ = :_${key}_`)
+            }
+
+            return `SET ${[Expressions]}`
+        } else {
+            throw new Error("When using this method, you must pass props to the constructor")
+        }
+    }
+
+    TableDefinitions(keys: Keys): TableDefinitions {
+        let KeySchema: KeySchema[] = []
+        let AttributeDefinitions: AttributeDefinitions[] = []
+
+        if (keys.PartitionKey) {
+            KeySchema.push({
+                AttributeName: keys.PartitionKey,
+                KeyType: "HASH"
+            })
+
+            AttributeDefinitions.push({
+                AttributeName: keys.PartitionKey,
+                AttributeType: "S"
+            })
         }
 
-        return `SET ${[Expressions]}`
+        if (keys.SortKey) {
+            KeySchema.push({
+                AttributeName: keys.SortKey,
+                KeyType: "RANGE"
+            })
+
+            AttributeDefinitions.push({
+                AttributeName: keys.SortKey,
+                AttributeType: "S"
+            })
+        }
+
+        return { KeySchema, AttributeDefinitions }
     }
 }

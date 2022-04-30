@@ -2,7 +2,8 @@ import {
     DynamoDBClient, 
     DynamoDBClientConfig, 
     DescribeTableCommand,
-    CreateTableCommand
+    CreateTableCommand,
+    DeleteTableCommand
 } from "@aws-sdk/client-dynamodb"
 import { 
     DynamoDBDocumentClient, 
@@ -11,27 +12,24 @@ import {
     DeleteCommand,
     UpdateCommand, 
     ScanCommand,
-    GetCommandOutput,
-    DeleteCommandOutput,
-    UpdateCommandOutput, 
-    ScanCommandOutput, 
-    BatchWriteCommand
+    BatchWriteCommand,
+    BatchGetCommand
 } from "@aws-sdk/lib-dynamodb"
 import { DynamoDBGenerator } from "./generator"
 
-interface Keys {
+export interface Keys {
     PartitionKey: string
     SortKey?: string
 }
 
-interface DynamoDBArgs {
+export interface DynamoDBArgs {
     TableName: string
     Config?: DynamoDBClientConfig
 }
 
-type Output<ItemType,CommandType,OmitType extends string> = Omit<CommandType, OmitType> & {[k in OmitType]?: ItemType}
+// type Output<ItemType,CommandType,OmitType extends string> = Omit<CommandType,OmitType> & {[k in OmitType]?: ItemType}
 
-export class DynamoDB<T> {
+export class DynamoDB<Model> {
     private readonly TableName: string
     private readonly DynamoDB: DynamoDBClient
     private readonly DocumentClient: DynamoDBDocumentClient
@@ -42,102 +40,169 @@ export class DynamoDB<T> {
         this.DocumentClient = DynamoDBDocumentClient.from(this.DynamoDB)
     }
 
-    private async key(index: number): Promise<string> {
+    private async keys(index: number): Promise<string> {
         const command = new DescribeTableCommand({ TableName: this.TableName })
-
         const { Table } = await this.DocumentClient.send(command)
 
         return Table.KeySchema[index].AttributeName
     }
 
-    async all<ItemType = T>(Limit?: number): Promise<ItemType[]> {
+    async all(Limit?: number): Promise<Model[]> {
         const command = new ScanCommand({
             TableName: this.TableName,
             Limit
         })
 
-        const { Items } = await this.DocumentClient.send(command) as Output<ItemType[],ScanCommandOutput,"Items">
+        const { Items } = await this.DocumentClient.send(command)
 
-        return Items
+        return Items as Model[]
     }
 
-    async get<ItemType = T>(Key: string): Promise<ItemType> {
-        const command = new GetCommand({ 
-            TableName: this.TableName, 
-            Key: { 
-                [await this.key(0)]: Key
-            } 
-        })
+    async get(input: string): Promise<Model>
+    async get(input: string[]): Promise<Model[]>
+    async get(input: string|string[]): Promise<Model|Model[]> {
+        if (Array.isArray(input)) {
+            const key = await this.keys(0)
+            const command = new BatchGetCommand({
+                RequestItems: {
+                    [this.TableName]: {
+                        Keys: input.map(item => ({
+                            [key]: item
+                        }))
+                    }
+                }
+            })
 
-        const { Item } = await this.DocumentClient.send(command) as Output<ItemType,GetCommandOutput,"Item">
+            const { Responses } = await this.DocumentClient.send(command)
+
+            return Responses[this.TableName] as Model[]
+        } else {
+            const command = new GetCommand({ 
+                TableName: this.TableName, 
+                Key: { 
+                    [await this.keys(0)]: input
+                } 
+            })
+
+            const { Item } = await this.DocumentClient.send(command)
     
-        return Item
-    }
+            return Item as Model
+        }
+    } 
 
-    async put<ItemType = T>(Item: ItemType): Promise<ItemType> {
-        const command = new PutCommand({
-            TableName: this.TableName,
-            ConditionExpression: `attribute_not_exists(${await this.key(0)})`,
-            Item
-        })
+    async put(input: Model): Promise<Model>
+    async put(input: Model[]): Promise<Model[]>
+    async put(input: Model|Model[]): Promise<Model|Model[]> {
+        if (Array.isArray(input)) {
+            const command = new BatchWriteCommand({
+                RequestItems: {
+                    [this.TableName]: input.map(Item => ({
+                        PutRequest: { Item }
+                    }))
+                }
+            })
 
-        try {
-            await this.DocumentClient.send(command) 
-            
-            return Item
-        } catch (error) {
-            throw new Error("An error occurred")
+            await this.DocumentClient.send(command)
+
+            return input
+        } else {
+            const command = new PutCommand({
+                TableName: this.TableName,
+                ConditionExpression: `attribute_not_exists(${await this.keys(0)})`,
+                Item: input
+            })
+
+            await this.DocumentClient.send(command)
+
+            return input
         }
     }
 
-    async delete<ItemType = T>(Key: string): Promise<ItemType> {
-        const command = new DeleteCommand({
-            TableName: this.TableName,
-            Key: {
-                [await this.key(0)]: Key
-            },
-            ReturnValues: "ALL_OLD"
-        })
+    async delete(input: string): Promise<Model>
+    async delete(input: string[]): Promise<Model[]>
+    async delete(input: string|string[]): Promise<Model|Model[]> {
+        if (Array.isArray(input)) {
+            const items = await this.get(input)
+            const key = await this.keys(0)
+            const command = new BatchWriteCommand({
+                RequestItems: {
+                    [this.TableName]: input.map(item => ({
+                        DeleteRequest: {
+                            Key: {
+                                [key]: item
+                            }
+                        }
+                    }))
+                }
+            })
 
-        const { Attributes } = await this.DocumentClient.send(command) as Output<ItemType,DeleteCommandOutput,"Attributes">
+            await this.DocumentClient.send(command)
+
+            return items
+        } else {
+            const command = new DeleteCommand({
+                TableName: this.TableName,
+                Key: {
+                    [await this.keys(0)]: input
+                },
+                ReturnValues: "ALL_OLD"
+            })
+
+            const { Attributes } = await this.DocumentClient.send(command)
         
-        return Attributes
+            return Attributes as Model
+        }
     }
 
-    async update<PropsType,ItemType = T>(Key: string, newprops: PropsType): Promise<ItemType> {
+    async update(key: string, newprops: Partial<Model>): Promise<Model> {
         const generator = new DynamoDBGenerator(newprops)
-
         const command = new UpdateCommand({ 
             TableName: this.TableName, 
             ReturnValues: "ALL_NEW",
             ExpressionAttributeNames: generator.AttributeNames(),
             ExpressionAttributeValues: generator.AttributeValues(),
             UpdateExpression: generator.UpdateExpression(),
-            ConditionExpression: `attribute_exists(${await this.key(0)})`,
+            ConditionExpression: `attribute_exists(${await this.keys(0)})`,
             Key: { 
-                [await this.key(0)]: Key
+                [await this.keys(0)]: key
             }
         })
 
-        const { Attributes } = await this.DocumentClient.send(command) as Output<ItemType,UpdateCommandOutput,"Attributes">
+        const { Attributes } = await this.DocumentClient.send(command)
 
-        return Attributes
+        return Attributes as Model
+    }
+
+    async initialize(keys: Keys): Promise<string> {
+        const generator = new DynamoDBGenerator()
+        const command = new CreateTableCommand({
+            BillingMode: "PAY_PER_REQUEST",
+            TableName: this.TableName,
+            KeySchema: generator.TableDefinitions(keys).KeySchema, 
+            AttributeDefinitions: generator.TableDefinitions(keys).AttributeDefinitions
+        })
+
+        const { TableDescription } = await this.DocumentClient.send(command)
+
+        if (!TableDescription) {
+            return "An error occurred."
+        }
+        
+        return `Table "${TableDescription.TableName}" created succsessfully`
     }
 
     async purge(): Promise<string> {
-        const items = await this.all<Record<string, any>>()
-
-        const requests = items.map(async item => ({
-            DeleteRequest: {
-                Key: {
-                    [await this.key(0)]: item[await this.key(0)]
-                }
-            }
-        }))
-
+        const items = await this.all()
+        const key = await this.keys(0)
         const command = new BatchWriteCommand({
             RequestItems: {
-                [this.TableName]: requests
+                [this.TableName]: items.map(item => ({
+                    DeleteRequest: {
+                        Key: {
+                            [key]: item[key]
+                        }
+                    }
+                }))
             }
         })
 
@@ -150,30 +215,9 @@ export class DynamoDB<T> {
         }
     }
 
-    async initialize(Keys: Keys): Promise<string> {
-        const command = new CreateTableCommand({
-            TableName: this.TableName,
-            BillingMode: "PAY_PER_REQUEST",
-            KeySchema: [
-                {
-                    AttributeName: Keys.PartitionKey,
-                    KeyType: "HASH"
-                },
-                {
-                    AttributeName: Keys.SortKey,
-                    KeyType: "RANGE"
-                }
-            ], 
-            AttributeDefinitions: [
-                {
-                    AttributeName: Keys.PartitionKey,
-                    AttributeType: "S"
-                },
-                {
-                    AttributeName: Keys.SortKey,
-                    AttributeType: "S"
-                }
-            ]
+    async drop(): Promise<string> {
+        const command = new DeleteTableCommand({
+            TableName: this.TableName
         })
 
         const { TableDescription } = await this.DocumentClient.send(command)
@@ -181,7 +225,7 @@ export class DynamoDB<T> {
         if (!TableDescription) {
             return "An error occurred."
         }
-        
-        return `Table "${TableDescription.TableName}" created succsessfully`
+
+        return `Table "${TableDescription.TableName}" deleted.`
     }
 }

@@ -40,6 +40,7 @@ exports.DynamoDB = void 0;
 var client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
 var lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 var generator_1 = require("./generator");
+// type Output<ItemType,CommandType,OmitType extends string> = Omit<CommandType,OmitType> & {[k in OmitType]?: ItemType}
 var DynamoDB = /** @class */ (function () {
     function DynamoDB(_a) {
         var TableName = _a.TableName, _b = _a.Config, Config = _b === void 0 ? { region: process.env.AWS_REGION } : _b;
@@ -47,7 +48,7 @@ var DynamoDB = /** @class */ (function () {
         this.DynamoDB = new client_dynamodb_1.DynamoDBClient(Config);
         this.DocumentClient = lib_dynamodb_1.DynamoDBDocumentClient.from(this.DynamoDB);
     }
-    DynamoDB.prototype.key = function (index) {
+    DynamoDB.prototype.keys = function (index) {
         return __awaiter(this, void 0, void 0, function () {
             var command, Table;
             return __generator(this, function (_a) {
@@ -80,90 +81,143 @@ var DynamoDB = /** @class */ (function () {
             });
         });
     };
-    DynamoDB.prototype.get = function (Key) {
+    DynamoDB.prototype.get = function (input) {
         return __awaiter(this, void 0, void 0, function () {
-            var command, _a, Item;
-            var _b, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var key_1, command, Responses, command, _a, Item;
+            var _b, _c, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
-                        _a = lib_dynamodb_1.GetCommand.bind;
-                        _b = {
-                            TableName: this.TableName
-                        };
-                        _c = {};
-                        return [4 /*yield*/, this.key(0)];
+                        if (!Array.isArray(input)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.keys(0)];
                     case 1:
-                        command = new (_a.apply(lib_dynamodb_1.GetCommand, [void 0, (_b.Key = (_c[_d.sent()] = Key,
-                                _c),
-                                _b)]))();
+                        key_1 = _e.sent();
+                        command = new lib_dynamodb_1.BatchGetCommand({
+                            RequestItems: (_b = {},
+                                _b[this.TableName] = {
+                                    Keys: input.map(function (item) {
+                                        var _a;
+                                        return (_a = {},
+                                            _a[key_1] = item,
+                                            _a);
+                                    })
+                                },
+                                _b)
+                        });
                         return [4 /*yield*/, this.DocumentClient.send(command)];
                     case 2:
-                        Item = (_d.sent()).Item;
-                        return [2 /*return*/, Item];
-                }
-            });
-        });
-    };
-    DynamoDB.prototype.put = function (Item) {
-        return __awaiter(this, void 0, void 0, function () {
-            var command, _a, _b, error_1;
-            var _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        _a = lib_dynamodb_1.PutCommand.bind;
+                        Responses = (_e.sent()).Responses;
+                        return [2 /*return*/, Responses[this.TableName]];
+                    case 3:
+                        _a = lib_dynamodb_1.GetCommand.bind;
                         _c = {
                             TableName: this.TableName
                         };
-                        _b = "attribute_not_exists(".concat;
-                        return [4 /*yield*/, this.key(0)];
-                    case 1:
-                        command = new (_a.apply(lib_dynamodb_1.PutCommand, [void 0, (_c.ConditionExpression = _b.apply("attribute_not_exists(", [_d.sent(), ")"]),
-                                _c.Item = Item,
-                                _c)]))();
-                        _d.label = 2;
-                    case 2:
-                        _d.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, this.DocumentClient.send(command)];
-                    case 3:
-                        _d.sent();
-                        return [2 /*return*/, Item];
+                        _d = {};
+                        return [4 /*yield*/, this.keys(0)];
                     case 4:
-                        error_1 = _d.sent();
-                        throw new Error("An error occurred");
-                    case 5: return [2 /*return*/];
+                        command = new (_a.apply(lib_dynamodb_1.GetCommand, [void 0, (_c.Key = (_d[_e.sent()] = input,
+                                _d),
+                                _c)]))();
+                        return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 5:
+                        Item = (_e.sent()).Item;
+                        return [2 /*return*/, Item];
                 }
             });
         });
     };
-    DynamoDB.prototype["delete"] = function (Key) {
+    DynamoDB.prototype.put = function (input) {
         return __awaiter(this, void 0, void 0, function () {
-            var command, _a, Attributes;
-            var _b, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var command, command, _a, _b;
+            var _c, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
-                        _a = lib_dynamodb_1.DeleteCommand.bind;
-                        _b = {
+                        if (!Array.isArray(input)) return [3 /*break*/, 2];
+                        command = new lib_dynamodb_1.BatchWriteCommand({
+                            RequestItems: (_c = {},
+                                _c[this.TableName] = input.map(function (Item) { return ({
+                                    PutRequest: { Item: Item }
+                                }); }),
+                                _c)
+                        });
+                        return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 1:
+                        _e.sent();
+                        return [2 /*return*/, input];
+                    case 2:
+                        _a = lib_dynamodb_1.PutCommand.bind;
+                        _d = {
                             TableName: this.TableName
                         };
-                        _c = {};
-                        return [4 /*yield*/, this.key(0)];
-                    case 1:
-                        command = new (_a.apply(lib_dynamodb_1.DeleteCommand, [void 0, (_b.Key = (_c[_d.sent()] = Key,
-                                _c),
-                                _b.ReturnValues = "ALL_OLD",
-                                _b)]))();
+                        _b = "attribute_not_exists(".concat;
+                        return [4 /*yield*/, this.keys(0)];
+                    case 3:
+                        command = new (_a.apply(lib_dynamodb_1.PutCommand, [void 0, (_d.ConditionExpression = _b.apply("attribute_not_exists(", [_e.sent(), ")"]),
+                                _d.Item = input,
+                                _d)]))();
                         return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 4:
+                        _e.sent();
+                        return [2 /*return*/, input];
+                }
+            });
+        });
+    };
+    DynamoDB.prototype["delete"] = function (input) {
+        return __awaiter(this, void 0, void 0, function () {
+            var items, key_2, command, command, _a, Attributes;
+            var _b, _c, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        if (!Array.isArray(input)) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.get(input)];
+                    case 1:
+                        items = _e.sent();
+                        return [4 /*yield*/, this.keys(0)];
                     case 2:
-                        Attributes = (_d.sent()).Attributes;
+                        key_2 = _e.sent();
+                        command = new lib_dynamodb_1.BatchWriteCommand({
+                            RequestItems: (_b = {},
+                                _b[this.TableName] = input.map(function (item) {
+                                    var _a;
+                                    return ({
+                                        DeleteRequest: {
+                                            Key: (_a = {},
+                                                _a[key_2] = item,
+                                                _a)
+                                        }
+                                    });
+                                }),
+                                _b)
+                        });
+                        return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 3:
+                        _e.sent();
+                        return [2 /*return*/, items];
+                    case 4:
+                        _a = lib_dynamodb_1.DeleteCommand.bind;
+                        _c = {
+                            TableName: this.TableName
+                        };
+                        _d = {};
+                        return [4 /*yield*/, this.keys(0)];
+                    case 5:
+                        command = new (_a.apply(lib_dynamodb_1.DeleteCommand, [void 0, (_c.Key = (_d[_e.sent()] = input,
+                                _d),
+                                _c.ReturnValues = "ALL_OLD",
+                                _c)]))();
+                        return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 6:
+                        Attributes = (_e.sent()).Attributes;
                         return [2 /*return*/, Attributes];
                 }
             });
         });
     };
-    DynamoDB.prototype.update = function (Key, newprops) {
+    DynamoDB.prototype.update = function (key, newprops) {
         return __awaiter(this, void 0, void 0, function () {
             var generator, command, _a, _b, Attributes;
             var _c, _d;
@@ -180,13 +234,13 @@ var DynamoDB = /** @class */ (function () {
                             UpdateExpression: generator.UpdateExpression()
                         };
                         _b = "attribute_exists(".concat;
-                        return [4 /*yield*/, this.key(0)];
+                        return [4 /*yield*/, this.keys(0)];
                     case 1:
                         _c.ConditionExpression = _b.apply("attribute_exists(", [_e.sent(), ")"]);
                         _d = {};
-                        return [4 /*yield*/, this.key(0)];
+                        return [4 /*yield*/, this.keys(0)];
                     case 2:
-                        command = new (_a.apply(lib_dynamodb_1.UpdateCommand, [void 0, (_c.Key = (_d[_e.sent()] = Key,
+                        command = new (_a.apply(lib_dynamodb_1.UpdateCommand, [void 0, (_c.Key = (_d[_e.sent()] = key,
                                 _d),
                                 _c)]))();
                         return [4 /*yield*/, this.DocumentClient.send(command)];
@@ -197,86 +251,18 @@ var DynamoDB = /** @class */ (function () {
             });
         });
     };
-    DynamoDB.prototype.purge = function () {
+    DynamoDB.prototype.initialize = function (keys) {
         return __awaiter(this, void 0, void 0, function () {
-            var items, requests, command, error_2;
-            var _a;
-            var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.all()];
-                    case 1:
-                        items = _b.sent();
-                        requests = items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, _b;
-                            var _c, _d, _e;
-                            return __generator(this, function (_f) {
-                                switch (_f.label) {
-                                    case 0:
-                                        _c = {};
-                                        _d = {};
-                                        _e = {};
-                                        return [4 /*yield*/, this.key(0)];
-                                    case 1:
-                                        _a = _f.sent();
-                                        _b = item;
-                                        return [4 /*yield*/, this.key(0)];
-                                    case 2: return [2 /*return*/, (_c.DeleteRequest = (_d.Key = (_e[_a] = _b[_f.sent()],
-                                            _e),
-                                            _d),
-                                            _c)];
-                                }
-                            });
-                        }); });
-                        command = new lib_dynamodb_1.BatchWriteCommand({
-                            RequestItems: (_a = {},
-                                _a[this.TableName] = requests,
-                                _a)
-                        });
-                        _b.label = 2;
-                    case 2:
-                        _b.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, this.DocumentClient.send(command)];
-                    case 3:
-                        _b.sent();
-                        return [2 /*return*/, "Every element (".concat(items.length.toString(), ") on Table: \"").concat(this.TableName, "\" has been deleted successfully.")];
-                    case 4:
-                        error_2 = _b.sent();
-                        return [2 /*return*/, "An error occurred."];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
-    DynamoDB.prototype.initialize = function (Keys) {
-        return __awaiter(this, void 0, void 0, function () {
-            var command, TableDescription;
+            var generator, command, TableDescription;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        generator = new generator_1.DynamoDBGenerator();
                         command = new client_dynamodb_1.CreateTableCommand({
-                            TableName: this.TableName,
                             BillingMode: "PAY_PER_REQUEST",
-                            KeySchema: [
-                                {
-                                    AttributeName: Keys.PartitionKey,
-                                    KeyType: "HASH"
-                                },
-                                {
-                                    AttributeName: Keys.SortKey,
-                                    KeyType: "RANGE"
-                                }
-                            ],
-                            AttributeDefinitions: [
-                                {
-                                    AttributeName: Keys.PartitionKey,
-                                    AttributeType: "S"
-                                },
-                                {
-                                    AttributeName: Keys.SortKey,
-                                    AttributeType: "S"
-                                }
-                            ]
+                            TableName: this.TableName,
+                            KeySchema: generator.TableDefinitions(keys).KeySchema,
+                            AttributeDefinitions: generator.TableDefinitions(keys).AttributeDefinitions
                         });
                         return [4 /*yield*/, this.DocumentClient.send(command)];
                     case 1:
@@ -285,6 +271,67 @@ var DynamoDB = /** @class */ (function () {
                             return [2 /*return*/, "An error occurred."];
                         }
                         return [2 /*return*/, "Table \"".concat(TableDescription.TableName, "\" created succsessfully")];
+                }
+            });
+        });
+    };
+    DynamoDB.prototype.purge = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var items, key, command, error_1;
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.all()];
+                    case 1:
+                        items = _b.sent();
+                        return [4 /*yield*/, this.keys(0)];
+                    case 2:
+                        key = _b.sent();
+                        command = new lib_dynamodb_1.BatchWriteCommand({
+                            RequestItems: (_a = {},
+                                _a[this.TableName] = items.map(function (item) {
+                                    var _a;
+                                    return ({
+                                        DeleteRequest: {
+                                            Key: (_a = {},
+                                                _a[key] = item[key],
+                                                _a)
+                                        }
+                                    });
+                                }),
+                                _a)
+                        });
+                        _b.label = 3;
+                    case 3:
+                        _b.trys.push([3, 5, , 6]);
+                        return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 4:
+                        _b.sent();
+                        return [2 /*return*/, "Every element (".concat(items.length.toString(), ") on Table: \"").concat(this.TableName, "\" has been deleted successfully.")];
+                    case 5:
+                        error_1 = _b.sent();
+                        return [2 /*return*/, "An error occurred."];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    DynamoDB.prototype.drop = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var command, TableDescription;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        command = new client_dynamodb_1.DeleteTableCommand({
+                            TableName: this.TableName
+                        });
+                        return [4 /*yield*/, this.DocumentClient.send(command)];
+                    case 1:
+                        TableDescription = (_a.sent()).TableDescription;
+                        if (!TableDescription) {
+                            return [2 /*return*/, "An error occurred."];
+                        }
+                        return [2 /*return*/, "Table \"".concat(TableDescription.TableName, "\" deleted.")];
                 }
             });
         });

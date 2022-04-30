@@ -1,3 +1,5 @@
 node_modules
+dynamodb-local
 src
+tests
 tsconfig.json

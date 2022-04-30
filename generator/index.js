@@ -13,32 +13,74 @@ var __assign = (this && this.__assign) || function () {
 exports.__esModule = true;
 exports.DynamoDBGenerator = void 0;
 var DynamoDBGenerator = /** @class */ (function () {
-    function DynamoDBGenerator(props) {
-        this.props = props;
+    function DynamoDBGenerator(input) {
+        if (input != undefined) {
+            this.input = input;
+        }
     }
     DynamoDBGenerator.prototype.AttributeValues = function () {
         var _a;
-        var AttributeValues;
-        for (var _i = 0, _b = Object.entries(this.props); _i < _b.length; _i++) {
-            var _c = _b[_i], key = _c[0], value = _c[1];
-            AttributeValues = __assign(__assign({}, AttributeValues), (_a = {}, _a[":_".concat(key, "_")] = value, _a));
+        if (this.input) {
+            var AttributeValues = void 0;
+            for (var _i = 0, _b = Object.entries(this.input); _i < _b.length; _i++) {
+                var _c = _b[_i], key = _c[0], value = _c[1];
+                AttributeValues = __assign(__assign({}, AttributeValues), (_a = {}, _a[":_".concat(key, "_")] = value, _a));
+            }
+            return AttributeValues;
         }
-        return AttributeValues;
+        else {
+            throw new Error("When using this method, you must pass props to the constructor");
+        }
     };
     DynamoDBGenerator.prototype.AttributeNames = function () {
         var _a;
-        var AttributeNames;
-        for (var key in this.props) {
-            AttributeNames = __assign(__assign({}, AttributeNames), (_a = {}, _a["#_".concat(key, "_")] = key, _a));
+        if (this.input) {
+            var AttributeNames = void 0;
+            for (var key in this.input) {
+                AttributeNames = __assign(__assign({}, AttributeNames), (_a = {}, _a["#_".concat(key, "_")] = key, _a));
+            }
+            return AttributeNames;
         }
-        return AttributeNames;
+        else {
+            throw new Error("When using this method, you must pass props to the constructor");
+        }
     };
     DynamoDBGenerator.prototype.UpdateExpression = function () {
-        var Expressions = [];
-        for (var key in this.props) {
-            Expressions.push("#_".concat(key, "_ = :_").concat(key, "_"));
+        if (this.input) {
+            var Expressions = [];
+            for (var key in this.input) {
+                Expressions.push("#_".concat(key, "_ = :_").concat(key, "_"));
+            }
+            return "SET ".concat([Expressions]);
         }
-        return "SET ".concat([Expressions]);
+        else {
+            throw new Error("When using this method, you must pass props to the constructor");
+        }
+    };
+    DynamoDBGenerator.prototype.TableDefinitions = function (keys) {
+        var KeySchema = [];
+        var AttributeDefinitions = [];
+        if (keys.PartitionKey) {
+            KeySchema.push({
+                AttributeName: keys.PartitionKey,
+                KeyType: "HASH"
+            });
+            AttributeDefinitions.push({
+                AttributeName: keys.PartitionKey,
+                AttributeType: "S"
+            });
+        }
+        if (keys.SortKey) {
+            KeySchema.push({
+                AttributeName: keys.SortKey,
+                KeyType: "RANGE"
+            });
+            AttributeDefinitions.push({
+                AttributeName: keys.SortKey,
+                AttributeType: "S"
+            });
+        }
+        return { KeySchema: KeySchema, AttributeDefinitions: AttributeDefinitions };
     };
     return DynamoDBGenerator;
 }());
