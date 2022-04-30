@@ -1,5 +1,5 @@
 node_modules
 dynamodb-local
 src
-tests
+__tests__
 tsconfig.json
