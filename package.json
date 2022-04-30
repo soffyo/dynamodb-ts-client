@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "pregit": "npm run build",
     "git": "git add . && git commit -m",
     "postgit": "git push",
     "prepare": "npm run build",
