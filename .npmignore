@@ -3,3 +3,5 @@ dynamodb-local
 src
 __tests__
 tsconfig.json
+jest.config.js
+accessKey_eu-central-1.db
