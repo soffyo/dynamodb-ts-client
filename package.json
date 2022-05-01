@@ -17,7 +17,7 @@
     "postversion": "git push",
     "prepublishOnly": "npm run test",
     "dynamodb": "java -Djava.library.path=./dynamodb-local/DynamoDBLocal_lib -jar ./dynamodb-local/DynamoDBLocal.jar",
-    "test": "concurrently --kill-others -s \"last\" -n \"DynamoDB,Jest\" -c \"bgBlue.bold.white,bgYellow.bold.white\" \"npm:dynamodb\" \"jest\""
+    "test": "concurrently --kill-others -s \"first\" -n \"DynamoDB,Jest\" -c \"bgBlue.bold.white,bgYellow.bold.white\" \"npm:dynamodb\" \"jest\""
   },
   "repository": {
     "type": "git",
