@@ -4,10 +4,7 @@
   "description": "DynamoDB Client with Typescript support",
   "main": "index.js",
   "types": "index.d.ts",
-  "files:": [
-    "index.d.ts",
-    "generator"
-  ],
+  "files": ["index.d.ts", "generator"],
   "scripts": {
     "build": "tsc",
     "git": "git add . && git commit -m",
@@ -29,7 +26,7 @@
     "client",
     "typescript"
   ],
-  "author": "soffyo",
+  "author": "soffyo <robi.slick@gmail.com> (https://soffyo.github.io)",
   "license": "SEE LICENSE IN LICENSE",
   "bugs": {
     "url": "https://github.com/soffyo/dynamodb-ts-client/issues"
