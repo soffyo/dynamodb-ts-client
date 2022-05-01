@@ -1,5 +1,5 @@
-/node_modules
-/generator
-/index.js
-/index.d.ts
+node_modules
+generator
+index.js
+index.d.ts
 **/*/.DS_Store

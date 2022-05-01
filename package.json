@@ -3,6 +3,11 @@
   "version": "1.0.5",
   "description": "DynamoDB Client with Typescript support",
   "main": "index.js",
+  "types": "index.d.ts",
+  "files:": [
+    "index.d.ts",
+    "generator"
+  ],
   "scripts": {
     "build": "tsc",
     "git": "git add . && git commit -m",
@@ -10,7 +15,7 @@
     "prepare": "npm run build",
     "version": "git add .",
     "postversion": "git push",
-    "prepublish": "npm run test",
+    "prepublishOnly": "npm run test",
     "dynamodb": "java -Djava.library.path=./dynamodb-local/DynamoDBLocal_lib -jar ./dynamodb-local/DynamoDBLocal.jar",
     "test": "concurrently --kill-others -n \"DynamoDB,Jest\" -c \"bgBlue.bold.white,bgYellow.bold.white\" \"npm:dynamodb\" \"jest\""
   },
