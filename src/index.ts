@@ -30,30 +30,29 @@ export interface DynamoDBArgs {
 // type Output<ItemType,CommandType,OmitType extends string> = Omit<CommandType,OmitType> & {[k in OmitType]?: ItemType}
 
 export class DynamoDB<Model> {
-    private readonly TableName: string
-    private readonly DynamoDB: DynamoDBClient
-    private readonly DocumentClient: DynamoDBDocumentClient
+    private readonly tableName: string
+    private readonly dynamodb: DynamoDBClient
+    private readonly client: DynamoDBDocumentClient
 
     constructor({ TableName, Config = { region: process.env.AWS_REGION } }: DynamoDBArgs) {
-        this.TableName = TableName 
-        this.DynamoDB = new DynamoDBClient(Config)
-        this.DocumentClient = DynamoDBDocumentClient.from(this.DynamoDB)
+        this.tableName = TableName 
+        this.dynamodb = new DynamoDBClient(Config)
+        this.client = DynamoDBDocumentClient.from(this.dynamodb)
     }
 
     private async keys(index: number): Promise<string> {
-        const command = new DescribeTableCommand({ TableName: this.TableName })
-        const { Table } = await this.DocumentClient.send(command)
+        const command = new DescribeTableCommand({ TableName: this.tableName })
+        const { Table } = await this.client.send(command)
 
         return Table.KeySchema[index].AttributeName
     }
 
     async all(Limit?: number): Promise<Model[]> {
         const command = new ScanCommand({
-            TableName: this.TableName,
+            TableName: this.tableName,
             Limit
         })
-
-        const { Items } = await this.DocumentClient.send(command)
+        const { Items } = await this.client.send(command)
 
         return Items as Model[]
     }
@@ -65,26 +64,24 @@ export class DynamoDB<Model> {
             const key = await this.keys(0)
             const command = new BatchGetCommand({
                 RequestItems: {
-                    [this.TableName]: {
+                    [this.tableName]: {
                         Keys: input.map(item => ({
                             [key]: item
                         }))
                     }
                 }
             })
+            const { Responses } = await this.client.send(command)
 
-            const { Responses } = await this.DocumentClient.send(command)
-
-            return Responses[this.TableName] as Model[]
+            return Responses[this.tableName] as Model[]
         } else {
             const command = new GetCommand({ 
-                TableName: this.TableName, 
+                TableName: this.tableName, 
                 Key: { 
                     [await this.keys(0)]: input
                 } 
             })
-
-            const { Item } = await this.DocumentClient.send(command)
+            const { Item } = await this.client.send(command)
     
             return Item as Model
         }
@@ -96,23 +93,23 @@ export class DynamoDB<Model> {
         if (Array.isArray(input)) {
             const command = new BatchWriteCommand({
                 RequestItems: {
-                    [this.TableName]: input.map(Item => ({
+                    [this.tableName]: input.map(Item => ({
                         PutRequest: { Item }
                     }))
                 }
             })
 
-            await this.DocumentClient.send(command)
+            await this.client.send(command)
 
-            return input
+                return input
         } else {
             const command = new PutCommand({
-                TableName: this.TableName,
+                TableName: this.tableName,
                 ConditionExpression: `attribute_not_exists(${await this.keys(0)})`,
                 Item: input
             })
 
-            await this.DocumentClient.send(command)
+            await this.client.send(command)
 
             return input
         }
@@ -126,7 +123,7 @@ export class DynamoDB<Model> {
             const key = await this.keys(0)
             const command = new BatchWriteCommand({
                 RequestItems: {
-                    [this.TableName]: input.map(item => ({
+                    [this.tableName]: input.map(item => ({
                         DeleteRequest: {
                             Key: {
                                 [key]: item
@@ -136,19 +133,18 @@ export class DynamoDB<Model> {
                 }
             })
 
-            await this.DocumentClient.send(command)
+            await this.client.send(command)
 
-            return items
+                return items
         } else {
             const command = new DeleteCommand({
-                TableName: this.TableName,
+                TableName: this.tableName,
                 Key: {
                     [await this.keys(0)]: input
                 },
                 ReturnValues: "ALL_OLD"
             })
-
-            const { Attributes } = await this.DocumentClient.send(command)
+            const { Attributes } = await this.client.send(command)
         
             return Attributes as Model
         }
@@ -157,7 +153,7 @@ export class DynamoDB<Model> {
     async update(key: string, newprops: Partial<Model>): Promise<Model> {
         const generator = new DynamoDBGenerator(newprops)
         const command = new UpdateCommand({ 
-            TableName: this.TableName, 
+            TableName: this.tableName, 
             ReturnValues: "ALL_NEW",
             ExpressionAttributeNames: generator.AttributeNames(),
             ExpressionAttributeValues: generator.AttributeValues(),
@@ -167,8 +163,7 @@ export class DynamoDB<Model> {
                 [await this.keys(0)]: key
             }
         })
-
-        const { Attributes } = await this.DocumentClient.send(command)
+        const { Attributes } = await this.client.send(command)
 
         return Attributes as Model
     }
@@ -177,12 +172,11 @@ export class DynamoDB<Model> {
         const generator = new DynamoDBGenerator()
         const command = new CreateTableCommand({
             BillingMode: "PAY_PER_REQUEST",
-            TableName: this.TableName,
+            TableName: this.tableName,
             KeySchema: generator.TableDefinitions(keys).KeySchema, 
             AttributeDefinitions: generator.TableDefinitions(keys).AttributeDefinitions
         })
-
-        const { TableDescription } = await this.DocumentClient.send(command)
+        const { TableDescription } = await this.client.send(command)
 
         if (!TableDescription) {
             return "An error occurred."
@@ -196,7 +190,7 @@ export class DynamoDB<Model> {
         const key = await this.keys(0)
         const command = new BatchWriteCommand({
             RequestItems: {
-                [this.TableName]: items.map(item => ({
+                [this.tableName]: items.map(item => ({
                     DeleteRequest: {
                         Key: {
                             [key]: item[key]
@@ -207,9 +201,9 @@ export class DynamoDB<Model> {
         })
 
         try {
-            await this.DocumentClient.send(command)
+            await this.client.send(command)
 
-            return `Every element (${items.length.toString()}) on Table: "${this.TableName}" has been deleted successfully.`
+            return `Every element (${items.length.toString()}) on Table: "${this.tableName}" has been deleted successfully.`
         } catch (error) {
             return "An error occurred."
         }
@@ -217,10 +211,9 @@ export class DynamoDB<Model> {
 
     async drop(): Promise<string> {
         const command = new DeleteTableCommand({
-            TableName: this.TableName
+            TableName: this.tableName
         })
-
-        const { TableDescription } = await this.DocumentClient.send(command)
+        const { TableDescription } = await this.client.send(command)
 
         if (!TableDescription) {
             return "An error occurred."
