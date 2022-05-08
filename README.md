@@ -1,8 +1,8 @@
 # DynamoDB TS Client
-AWS DynamoDB Client with Typescript support. It is intended for use in Typescript environments where your schemas are already defined via classes or types like [TypeGraphQL](https://typegraphql.com/). You can pass them to the class constructor and have them propagated to all its methods.
+AWS DynamoDB Client with Typescript support. It is intended for use in Typescript environments where your schemas are already defined via classes or types like [TypeGraphQL](https://typegraphql.com/). You can pass them to the client and have them propagated to all its methods.
 
 # Developemnt
-This client is in early development stage and may lack essential features, or may appear unfinished. At this stage, it is not suitable for production environments yet. Expect to see more in the next future.
+This client covers the most basic DynamoDB usage. Some of the functionalities (like secondary indexes) are yet to be implemented. Check this page anytime soon to see evolutions!
 
 # Installation
 ```
@@ -19,56 +19,67 @@ const db = new DynamoDB<ItemType>({
     TableName: "My Table", // Always needed.
     Config: {
         ...
-        region: "eu-central-1" // Needed if AWS_REGION .env variable is not set.
+        region: "eu-central-1" // You can omit this if you set the AWS_REGION .env variable. Example: AWS_REGION=eu-central-1
         ...
     } 
 })
 
 // Creates the table
 await db.initialize({
-    PartitionKey: "partitionKey",
-    SortKey: "sortKey"
+    Keys: {
+        PartitionKey: {
+            Name: "name",
+            Type: "S"
+        }, 
+        SortKey: {
+            Name: "id",
+            Type: "N"
+        }
+    }
 })
 
-// Retrieves all the items from the table
+// Retrieves all the items from the table (even if the output is larger than DynamoDB's 1MB limit)
 await db.all()
 
-// Retrieves the item(s) matching the Key(s) passed
-await db.get("key")
-await db.get(["key", "another key"])
-
 // Creates the item(s) with given properties
-await db.put({ ...item })
-await db.put([{ ...item }, { ...anotherItem }])
+await db.put({ name: "John", id: 1234, other: "..." })
+await db.put([
+    { name: "John", id: 1234, other: "..." }, 
+    { name: "Robert", id: 5678, other: "..." }
+])
+
+// Retrieves the item(s) matching the Key(s) passed
+await db.get({ name: "John", id: 1234 })
+await db.get([{ name: "John", id: 1234 }, { name: "Robert", id: 5678 }])
 
 // Updates the item (if existent) with the new props passed
-await db.update("key", { ...newProps })
+await db.update({ 
+    Key: { name: "John", id: 1234 }, 
+    Update: { other: "..." } 
+})
 
 // Deletes the item(s) matching the Key(s)
-await db.delete("key")
-await db.delete(["key", "another key"])
-
-// Removes every element from the table (but not the table itself)
-await db.purge()
+await db.delete({ name: "John", id: 1234 })
+await db.delete([{ name: "John", id: 1234 }, { name: "Robert", id: 5678 }])
 
 // Completely removes the table with its content from the database
 await db.drop()
 ```
 
 # Usage example
-In this example we create a simple GraphQL class resolver. This is a typical TypeGraphQL format, with decorators omitted for improved readability.
+In this example we create a simple GraphQL class resolver. This is a typical TypeGraphQL format (decorators have been omitted for improved readability).  
 ```ts
 import { DynamoDB } from "dynamodb-ts-client"
 
 class User {
-    id: string
-    username: string
+    id: number
+    name: string
     active: boolean
 }
 
 class UserInput implements User {
-    id: string
-    username: string
+    id: number
+    name: string
 }
 
 class UsersResolvers {
@@ -78,16 +89,24 @@ class UsersResolvers {
         return await this.db.all()
     }
 
-    async user(id: string): User {
-        return await this.db.get(id)
+    async user(input: UserInput): User {
+        return await this.db.get({ name: input.name, id: input.id }) // <- Type checking based on "User" 
     }
 
-    async signup(props: UserInput): User {
-        return await this.db.put({ active: false, ...props })
+    async signup(user: UserInput): User {
+        return await this.db.put({ active: false, ...user }) // <- Type checking based on "User"
     }
 
-    async activate(id: string): User {
-        return await this.db.update(id, { active: true })
+    async activate(input: UserInput): User {
+        return await this.db.update({
+            Key: {
+                name: input.name,
+                id: input.id
+            },
+            Update: {
+                active: true
+            }
+        }) // <- Type checking based on "User"
     }
 }
 ```

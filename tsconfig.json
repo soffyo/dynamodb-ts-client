@@ -4,7 +4,8 @@
         "baseUrl": ".",
         "outDir": ".",
         "target": "ES3",
-        "declaration": true
+        "declaration": true,
+        "experimentalDecorators": true
     },
     "exclude": [
         "node_modules"
