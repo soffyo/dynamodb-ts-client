@@ -1,9 +1,0 @@
-{
-    "compilerOptions": {
-        "noEmit": true,
-        "baseUrl": ".",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
-    },
-    "include": ["."]
-}

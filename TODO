@@ -1,0 +1,8 @@
+- Implement REMOVE functionality on update method
+- Complete attribute_type operator
+- Add attribute_exists/attribute_not_exists to operators
+- Implement projection expression on supported methods
+- Implement secondary indexes
+- Handle consumed capacity
+- Handle errors
+- Clean the code
