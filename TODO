@@ -11,4 +11,5 @@
 - Handle consumed capacity
 - Handle errors
 - Find an alternative to **_dynamoDBSeparator_**
+- Adjust build system, consider using a bundler and update package.json accordingly
 - Clean the code
