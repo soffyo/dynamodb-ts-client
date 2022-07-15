@@ -4,7 +4,7 @@ import { operators } from "../operators"
 
 export function attributeValues(obj: Record<string,any>): Record<string,Exclude<any,{}>> { 
     let values = {}
-    const addPath = (a, b) => a ? `${a}_${b}` : b
+    const addPath = (a, b) => a ? `${a}_dynamoDBSeparator_${b}` : b
     void (function iterate(obj = {}, head = '') {
         Object.entries(obj).reduce((a: any, [key, value]) => {
             let path = addPath(head, key)
@@ -32,7 +32,7 @@ export function attributeNames<T = any>(input: Array<keyof T>) {
 
 export function conditionAttributeValues<T>(obj: ConditionsObject<T>, marker = "_condition"): Record<string,Exclude<any,{}>> { 
     let values = {}
-    const addPath = (a, b) => a ? `${a}_${b}` : b
+    const addPath = (a, b) => a ? `${a}_dynamoDBSeparator_${b}` : b
     void (function iterate(obj = {}, head = '') {
         Object.entries(obj).reduce((a: any, [key, value]) => {
             let path = !operators.includes(key as ConditionalOperator|StringOperator) ? addPath(head, key) : head
@@ -50,12 +50,26 @@ export function conditionAttributeValues<T>(obj: ConditionsObject<T>, marker = "
                             }
                         } 
                         break
+                    case "in":
+                    case "IN":
+                        if (Array.isArray(value)) {
+                            value.forEach((item, index) => {
+                                values = {
+                                    ...values,
+                                    [`:${path}_${index}_in_${marker}`]: value[index]
+                                }
+                            })
+                        }
+                        break
                     case "size": 
                         const operator = Object.keys(obj[key])[0]
                         values = {
                             ...values,
                             ":size_dynamoDbOperator": obj[key][operator]
                         }
+                        break
+                    case "attribute_exists": 
+                        values = { ...values }
                         break
                     default: values = { ...values, [`:${path}${marker}`]: value }
                 }

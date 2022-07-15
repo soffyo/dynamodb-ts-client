@@ -2,17 +2,14 @@ import { ScalarAttributeType, DynamoDBClientConfig, BillingMode, DynamoDBClient 
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb"
 import { PickOnly, ValueOf, RecursivePartial } from "./utility"
 
-export type ComparisonOperator = "=" | "<" | "<=" | ">" | ">=" | "BETWEEN" | "begins_with"
-
-export type ConditionalOperator = ComparisonOperator | "attribute_exists" | "attribute_not_exists" | "attribute_type" | "contains" | "size"
-
-export type StringOperator = "equal" | "greater" | "lesser" | "greater_equal" | "lesser_equal" | "between" 
+export type ComparisonOperator = "=" | "<" | "<=" | ">" | ">=" | "BETWEEN" | "begins_with"  
+export type ConditionalOperator = ComparisonOperator | "attribute_exists" | "attribute_type" | "contains" | "size" | "IN" | "in"
+export type StringOperator = "equal" | "greater" | "lesser" | "greater_equal" | "lesser_equal" | "between"
+export type Remove = "__removeDynamoDBAttribute"
 
 export type Attributes<T> = {
     [K in keyof T]?: T[K]
 }
-
-export type Remove = "__removeDynamoDBAttribute"
 
 export type UpdateInput<T> = {
     update: ValueOf<{
@@ -48,6 +45,7 @@ type Size = ValueOf<{
 
 type ComparisonType<T,K> = 
     T extends "BETWEEN"|"between" ? [K,K] : 
+    T extends "IN"|"in" ? K[] :
     T extends "begins_with" ? K extends string ? K : never :
     T extends "contains" ? K extends (infer G)[] ? G : K extends string ? K : never : 
     T extends "attribute_type" ? "N"|"S" : 

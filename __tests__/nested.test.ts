@@ -1,6 +1,6 @@
 import { isObject } from "../src/utilities"
 import { ConditionsObject, ConditionalOperator, StringOperator } from "../src/types"
-import { attributeNames } from "../src/generator"
+import { attributeNames, conditionExpression } from "../src/generator"
 
 class obj {
     name: string
@@ -43,8 +43,8 @@ const conditions: ConditionsObject<obj> = {
             first_name: { begins_with: "FirstName" },
             first_id: { size: { "<=": 10 } },
             secondchild: {
-                second_name: { ">": "SecondName" },
-                second_id: { ">=": 2 }
+                second_name: { attribute_exists: true },
+                second_id: { attribute_exists: false }
             }
         }
     }
@@ -69,55 +69,17 @@ const update = {
     }
 }
 
-test("propsToArr", () => {
-    console.log(attributeNames(propsToArr(update)))
-})
+
 
 test("attrVal", () => {
-    console.log(conditionAttributeValues(conditions))
+    // console.log(conditionAttributeValues(conditions))
 })
 
 test("conditionExp", () => {
     console.log(conditionExpression(conditions))
 })
 
-function conditionAttributeValues<T>(obj: ConditionsObject<T>, marker = "_condition"): Record<string,Exclude<any,{}>> { 
-    let values = {}
-    const operators = ["between", "BETWEEN", "contains", "begins_with", "size", "=", "<", "<=", ">", ">="]
-    const addPath = (a, b) => a ? `${a}.${b}` : b
-    void (function iterate(obj = {}, head = '') {
-        Object.entries(obj).reduce((a: any, [key, value]) => {
-            let path = !operators.includes(key) ? addPath(head, key) : head
-            if (isObject(value) && key !== "size") {
-                return iterate(value as {}, path)
-            } else {
-                switch (key) {
-                    case "BETWEEN":
-                    case "between":
-                        if (Array.isArray(value)) {
-                            values = { 
-                                ...values, 
-                                [`:${path}1${marker}`]: value[0],
-                                [`:${path}2${marker}`]: value[1] 
-                            }
-                        } 
-                        break
-                    case "size": 
-                        const operator = Object.keys(obj[key])[0]
-                        values = {
-                            ...values,
-                            ":size_dynamoDbOperator": obj[key][operator]
-                        }
-                        break
-                    default: values = { ...values, [`:${path}${marker}`]: value }
-                }
-            }
-        }, [])
-    })(obj)
-    return values
-}
-
-function conditionExpression(obj: Record<string,any>, marker: string = "_condition") {
+/* function conditionExpression(obj: Record<string,any>, marker: string = "_condition") {
     const operators = ["between", "BETWEEN", "contains", "begins_with", "size", "=", "<", "<=", ">", ">="]
     const expressions: string[] = []
     const addPath = (a: string, b: string) => a ? `${a}.${b}` : b
@@ -146,17 +108,4 @@ function conditionExpression(obj: Record<string,any>, marker: string = "_conditi
         }, [])
     })(obj)
     return expressions.join(" AND ")
-}
-
-function propsToArr(obj) { 
-    const attributes: string[] = []
-    void (function add(obj) {
-        for (const [k,v] of Object.entries(obj)) {
-            attributes.push(k)
-            if (isObject(v)) {
-                add(v)
-            }
-        }
-    })(obj)
-    return attributes
-}
+} */

@@ -4,6 +4,8 @@ import { ConditionalOperator, StringOperator } from "../types"
 export const operators: (ConditionalOperator|StringOperator)[] = [
     "between", 
     "BETWEEN", 
+    "IN",
+    "in",
     "contains", 
     "begins_with", 
     "size", 
@@ -11,7 +13,9 @@ export const operators: (ConditionalOperator|StringOperator)[] = [
     "<", "lesser", 
     "<=", "lesser_equal",
     ">", "greater",
-    ">=", "greater_equal"
+    ">=", "greater_equal",
+    "attribute_exists",
+    "attribute_type"
 ]
 
 export function remove(): Remove {

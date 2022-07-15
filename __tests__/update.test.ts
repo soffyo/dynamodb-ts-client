@@ -22,7 +22,7 @@ const item: Obj = {
     map: {
         a: 0,
         b: {
-
+            d: "g"
         }
     }
 }
@@ -65,7 +65,10 @@ test("update", async() => {
             map: {
                 a: { "=": 0 },
                 b: {
-                    // c: remove()
+                    d: { 
+                        in: ["e", "f", "t"],
+                        contains: "g"
+                    },
                 }
             }
         }

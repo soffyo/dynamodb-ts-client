@@ -36,8 +36,11 @@ test("query", async() => {
     }) 
     await db.put(items)
     const query = await db.query({ 
-        name: "slug", 
-        id: { begins_with: "3" },
+        query: { 
+            name: "slug", 
+            id: { between: [3,4] },
+        }, 
+        ascending: false 
     })
     await db.drop()
     console.log(query)

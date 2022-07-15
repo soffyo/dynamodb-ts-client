@@ -22,7 +22,7 @@ export function propsToArray(obj) {
     const attributes: string[] = []
     void (function add(obj) {
         for (const [k,v] of Object.entries(obj)) {
-            if (!operators.includes(k)){
+            if (!operators.includes(k as any)){
                 attributes.push(k)
             }
             if (isObject(v)) {
