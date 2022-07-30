@@ -12,13 +12,11 @@ export type Attributes<T> = {
 }
 
 export type UpdateInput<T> = {
-    update: ValueOf<{
-        [K in keyof T]?: {
-            [k in K]?: RecursivePartial<T[K]>
-        } | {
-            [x in Exclude<any,K>]?: Remove
-        }
-    }>
+    update: {
+        [K in keyof T]?: RecursivePartial<T[K]>
+    } | { 
+        [K in Exclude<any,keyof T>]?: Remove
+    }
 }
 
 export type Keys<T> = ValueOf<{

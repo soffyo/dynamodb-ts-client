@@ -9,6 +9,7 @@ declare class Obj {
     map?: {
         a: number
         b: {
+            c?: string
             d?: string
         }
     }
@@ -22,7 +23,7 @@ const item: Obj = {
     map: {
         a: 0,
         b: {
-            d: "g"
+            c: "Nested value already present"
         }
     }
 }
@@ -53,21 +54,24 @@ test("update", async() => {
         update: {
             id: 3,
             content: "The content for the item has been updated",
+            list: [3],
+            not_here: remove(),
             map: {
                 b: {
-                    d: "Nested value added."
+                    c: "Nested value already present updated.",
+                    d: "Nested value not present added.",
+                    not_here: remove()
                 }
             }
         },
         condition: {
             content: { contains: "This" },
-            id: { "=": 5 },
+            id: { equal: 5 },
             map: {
-                a: { "=": 0 },
+                a: { equal: 0 },
                 b: {
-                    d: { 
-                        in: ["e", "f", "t"],
-                        contains: "g"
+                    c: { 
+                        contains: "already"
                     },
                 }
             }

@@ -1,15 +1,15 @@
-- Implement *REMOVE* functionality on update method
+- ~~Implement *REMOVE* functionality on update method~~
+  - *remove() operator function should not be possible on existing object members.*
 - Implement *ADD* on **update** method
 - Complete *attribute_type* operator
 - Implement *NOT* operator
-- ~~**Update query method to use latest generator functions.**~~
+- ~~**Update query method to use latest generator functions.**~~ 
 - ~~Add *IN* operator~~
 - ~~Add *attribute_exists/attribute_not_exists* to operators~~
 - Implement *OR* in expressions
 - Implement projection expression on supported methods *<-- Investigate if it's needed first*
 - Implement secondary indexes
 - Handle consumed capacity
-- Handle errors
-- Find an alternative to **_dynamoDBSeparator_**
+- Add errors if comparison operators are used as db objects attributes
 - Adjust build system, consider using a bundler and update package.json accordingly
 - Clean the code

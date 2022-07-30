@@ -7,13 +7,15 @@ export function attributeValues(obj: Record<string,any>): Record<string,Exclude<
     const addPath = (a, b) => a ? `${a}_dynamoDBSeparator_${b}` : b
     void (function iterate(obj = {}, head = '') {
         Object.entries(obj).reduce((a: any, [key, value]) => {
-            let path = addPath(head, key)
-            if (isObject(value)) {
-                return iterate(value, path)
-            } else {
-                values = {
-                    ...values,
-                    [`:${path}`]: value
+            if (value !== "__removeDynamoDBAttribute") {
+                let path = addPath(head, key)
+                if (isObject(value)) {
+                    return iterate(value, path)
+                } else {
+                    values = {
+                        ...values,
+                        [`:${path}`]: value
+                    }
                 }
             }
         }, [])

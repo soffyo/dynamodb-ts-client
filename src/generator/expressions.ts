@@ -17,7 +17,7 @@ export function updateExpression(input: Record<string,any>): string {
                 return iterate(value, path)
             } else {
                 const path_ = path.split("_dynamoDBSeparator_").join(".#")
-                if (value == "_removeDynamoDBAttribute") {
+                if (value == "__removeDynamoDBAttribute") {
                     removes.push(`#${path_}`)
                 } else {
                     updates.push(`#${path_} = :${path}`)

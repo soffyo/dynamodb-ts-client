@@ -31,7 +31,7 @@
     "typescript"
   ],
   "author": "soffyo <robi.slick@gmail.com> (https://soffyo.github.io)",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "GPL 3.0",
   "bugs": {
     "url": "https://github.com/soffyo/dynamodb-ts-client/issues"
   },
@@ -45,7 +45,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.113.0",
-    "@aws-sdk/lib-dynamodb": "^3.113.0"
+    "@aws-sdk/client-dynamodb": "^3.131.0",
+    "@aws-sdk/lib-dynamodb": "^3.131.0"
   }
 }

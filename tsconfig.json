@@ -4,6 +4,7 @@
         "baseUrl": ".",
         "outDir": ".",
         "target": "ES3",
+        "lib": ["es2017"],
         "declaration": true,
         "experimentalDecorators": true
     },
