@@ -10,6 +10,6 @@
 - Implement projection expression on supported methods *<-- Investigate if it's needed first*
 - Implement secondary indexes
 - Handle consumed capacity
-- Add errors if comparison operators are used as db objects attributes
-- Adjust build system, consider using a bundler and update package.json accordingly
+- Add javascript errors if comparison operators are used as db objects attributes
+- **IMPORTANT: Adjust build system, consider using a bundler and update package.json accordingly** 
 - Clean the code
