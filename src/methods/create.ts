@@ -1,7 +1,9 @@
 import { CreateTableCommand, KeySchemaElement, AttributeDefinition } from "@aws-sdk/client-dynamodb"
 import { TSClientMethodConfig, InitConfig, KeySchema } from "../types"
+import { checkMissingArg, checkKeySchema } from "../errors"
 
 export async function create<T>({ table, client }: TSClientMethodConfig, { Keys, BillingMode }: InitConfig<T>): Promise<string> {
+    checkMissingArg(Keys, "You must provide a KeySchema to create a new table!")
     const command = new CreateTableCommand({
         BillingMode,
         TableName: table,
@@ -13,9 +15,7 @@ export async function create<T>({ table, client }: TSClientMethodConfig, { Keys,
 }
 
 function keySchema<T extends Record<string,any>>(keys: KeySchema<T>): KeySchemaElement[] {
-    if (!keys) {
-        throw new Error("DynamoDBGenerator: When using keySchema(), you must pass the \"keys\" prop.")
-    }
+    checkKeySchema(keys)
     let KeySchema: Array<KeySchemaElement> = [{
         AttributeName: keys.PartitionKey.Name,
         KeyType: "HASH"
@@ -30,9 +30,6 @@ function keySchema<T extends Record<string,any>>(keys: KeySchema<T>): KeySchemaE
 }
 
 function attributeDefinitions<T extends Record<string,any>>(keys: KeySchema<T>): [AttributeDefinition, AttributeDefinition?]  {
-    if (!keys) {
-        throw new Error("DynamoDBGenerator: When using attributeDefinitions(), you must pass the \"keys\" prop.")
-    }
     let AttributeDefinitions: [AttributeDefinition, AttributeDefinition?] = [{
         AttributeName: keys.PartitionKey.Name,
         AttributeType: keys.PartitionKey.Type

@@ -16,16 +16,16 @@ declare class Obj {
 }
 
 const item: Obj = {
-    name: "Test item",
-    id: 5,
-    content: "This is the item for testing updates",
-    list: [1, 2, 3],
     map: {
         a: 0,
         b: {
             c: "Nested value already present"
         }
-    }
+    },
+    name: "Test item",
+    id: 5,
+    content: "This is the item for testing updates",
+    list: [1, 2, 3],
 }
 const db = new DynamoDB<Obj>({
     TableName: "update",

@@ -1,10 +1,12 @@
 import { BatchWriteCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb"
-import { objectKeys, hasOwnProperty, splitItems, propsToArray } from "../utilities"
+import { hasOwnProperty, splitItems, propsToArray } from "../utilities"
 import { Keys, CommandInput, TSClientMethodConfig } from "../types"
 import { conditionAttributeValues, attributeNames, conditionExpression, key, keys } from "../generator"
 import { get } from "./get"
+import { checkMissingArg } from "../errors"
 
 export async function _delete<T>({ table, client }: TSClientMethodConfig, input: Keys<T>[] | Keys<T> | CommandInput<T>): Promise<T[]|T> {
+    checkMissingArg(input, "Keys for the object/s to delete must be provided.")
     if (Array.isArray(input)) {
         const items = await get<T>({ table, client }, input)
         const inputs = splitItems(input)

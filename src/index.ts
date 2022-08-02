@@ -2,12 +2,14 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb"
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb"
 import { CommandInput, TSClientMethodConfig, TSClientParams, Query, QueryInput, InitConfig, Keys, UpdateInput } from "./types"
 import { create, query, scan, get, put, _delete, update, drop } from "./methods"
+import { checkMissingArg } from "./errors"
 
 export class DynamoDB<Model> {
     private readonly config: TSClientMethodConfig
     public readonly client: DynamoDBDocumentClient
 
     constructor(private input: TSClientParams) {
+        checkMissingArg(input.TableName, "TableName must be provided in order to initialize the client.")
         const dynamodb = new DynamoDBClient(input.Config)
         this.config = {
             table: input.TableName,

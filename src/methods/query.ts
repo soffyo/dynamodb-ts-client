@@ -2,8 +2,10 @@ import { QueryCommand } from "@aws-sdk/lib-dynamodb"
 import { hasOwnProperty } from "../utilities"
 import { attributeNames, attributeValues, conditionExpression, keys } from "../generator"
 import { Query, QueryInput, TSClientMethodConfig } from "../types"
+import { checkMissingArg } from "../errors"
 
 export async function query<T>({ table, client }: TSClientMethodConfig, input: QueryInput<T>|Query<T>): Promise<T[]> {
+    checkMissingArg(input, "A query input must be provided.")
     const { PKName, SKName } = await keys({ table, client }) as { PKName: string, SKName: string }
     let names = [PKName]
     let attributes = { [PKName]: hasOwnProperty(input, "query") ? input.query[PKName] : input[PKName] }

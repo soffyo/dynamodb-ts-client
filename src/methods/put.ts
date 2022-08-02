@@ -2,8 +2,11 @@ import { BatchWriteCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import { splitItems } from "../utilities"
 import { attributeNames, keys } from "../generator"
 import { TSClientMethodConfig } from "../types"
+import { checkReservedNames, checkMissingArg } from "../errors"
 
 export async function put<T>({ table, client }: TSClientMethodConfig, input: T[]|T): Promise<T[]|T> {
+    checkMissingArg(input, "At least one object to put must be provided.")
+    checkReservedNames(input)
     const { PKName, SKName } = await keys({ table, client }) as { PKName: string, SKName: string }
     const names = [PKName, SKName]
     const conditionExpression = (): string => {

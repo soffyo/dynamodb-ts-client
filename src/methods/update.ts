@@ -2,8 +2,11 @@ import { UpdateCommand } from "@aws-sdk/lib-dynamodb"
 import { propsToArray } from "../utilities"
 import { TSClientMethodConfig, CommandInput, UpdateInput } from "../types"
 import { attributeNames, attributeValues, keys, conditionExpression, conditionAttributeValues, updateExpression } from "../generator"
+import { checkMissingArg } from "../errors"
 
 export async function update<T>({ table, client }: TSClientMethodConfig, input: CommandInput<T> & UpdateInput<T>): Promise<T> {
+    checkMissingArg(input.key, "Key/s for the item to update must be provided.")
+    checkMissingArg(input.update, "Update input must be provided.")
     const { PKName, SKName } = await keys({ table, client }) as  { PKName: string, SKName: string }
     const names = [PKName]
     const defaultConditionExpression = (): string => {

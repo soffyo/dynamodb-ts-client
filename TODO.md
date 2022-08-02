@@ -1,3 +1,5 @@
+# TODO List 02/08/2022
+
 - ~~Implement *REMOVE* functionality on update method~~
   - *remove() operator function should not be possible on existing object members.*
 - Implement *ADD* on **update** method
@@ -10,6 +12,7 @@
 - Implement projection expression on supported methods *<-- Investigate if it's needed first*
 - Implement secondary indexes
 - Handle consumed capacity
-- Add javascript errors if comparison operators are used as db objects attributes
+- ~~Add javascript errors if comparison operators are used as db objects attributes~~
+  - Check if everything was handled.
 - **IMPORTANT: Adjust build system, consider using a bundler and update package.json accordingly** 
 - Clean the code
