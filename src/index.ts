@@ -1,10 +1,10 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb"
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb"
-import { CommandInput, TSClientMethodConfig, TSClientParams, Query, QueryInput, InitConfig, Keys, UpdateInput } from "./types"
+import { CheckReservedKeys, CommandInput, TSClientMethodConfig, TSClientParams, Query, QueryInput, InitConfig, Keys, UpdateInput } from "./types"
 import { create, query, scan, get, put, _delete, update, drop } from "./methods"
 import { checkMissingArg } from "./errors"
 
-export class DynamoDB<Model> {
+export class DynamoDB<Model extends CheckReservedKeys<Model>> {
     private readonly config: TSClientMethodConfig
     public readonly client: DynamoDBDocumentClient
 

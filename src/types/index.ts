@@ -11,6 +11,12 @@ export type Attributes<T> = {
     [K in keyof T]?: T[K]
 }
 
+export type CheckReservedKeys<T> = {
+    [K in keyof T]: CheckReservedKeys<T[K]>
+} & {
+    [K in (ConditionalOperator|StringOperator)]?: never
+}
+
 export type UpdateInput<T> = {
     update: {
         [K in keyof T]?: RecursivePartial<T[K]>

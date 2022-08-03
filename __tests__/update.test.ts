@@ -2,11 +2,13 @@ import { DynamoDB } from "../src"
 import { remove } from "../src/operators"
 
 declare class Obj {
+    //equal?: string
     name: string
     id?: number
     content?: string
     list?: number[]
     map?: {
+        //equal?: number
         a: number
         b: {
             c?: string
@@ -52,15 +54,16 @@ test("update", async() => {
     const updated = await db.update({
         key: { name: item.name },
         update: {
-            id: 3,
-            content: "The content for the item has been updated",
+            // id: remove(),
+            unexistent: remove(),
+            content: remove(),
             list: [3],
-            not_here: remove(),
             map: {
+                unexistent: remove(),
                 b: {
-                    c: "Nested value already present updated.",
+                    unexistent: remove(),
+                    c: remove(),
                     d: "Nested value not present added.",
-                    not_here: remove()
                 }
             }
         },
