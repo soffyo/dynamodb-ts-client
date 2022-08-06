@@ -1,11 +1,9 @@
 import { ScalarAttributeType, DynamoDBClientConfig, BillingMode, DynamoDBClient } from "@aws-sdk/client-dynamodb"
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb"
 
-//export type ComparisonOperator = "=" | "<" | "<=" | ">" | ">=" | "BETWEEN" | "begins_with"  
 export type QueryOperator = "EQUAL" | "LESSER" | "LESSER_EQUAL" | "GREATER" | "GREATER_EQUAL" | "BETWEEN" | "BEGINS_WITH"  
 export type UpdateOperator =  "ADD" | "DELETE"
 export type ConditionalOperator = QueryOperator | "ATTRIBUTE_EXISTS" | "ATTRIBUTE_TYPE" | "CONTAINS" | "SIZE" | "IN" 
-//export type StringOperator = "equal" | "greater" | "lesser" | "greater_equal" | "lesser_equal" | "between"
 export type Remove = "__removeDynamoDBAttribute"
 
 export type Attributes<T> = {

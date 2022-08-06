@@ -8,6 +8,7 @@ declare class Obj {
     content?: string
     list?: number[]
     set?: Set<string>
+    set2?: Set<number>
     map?: {
         //equal?: number
         a: number
@@ -35,7 +36,8 @@ const item: Obj = {
     id: 5,
     content: "This is the item for testing updates",
     list: [1, 2, 3],
-    set: new Set(["a", "b", "c"])
+    set: new Set(["a", "b", "c"]),
+    set2: new Set([1,2,3,4])
 }
 const db = new DynamoDB<Obj>({
     TableName: "update",
@@ -66,7 +68,8 @@ test("update", async() => {
             //unexistent: remove(),
             content: "ds",
             list: [2, 3, 4],
-            set: { DELETE: new Set(["c"]) },
+            set: { ADD: new Set(["c35f"]) },
+            set2: { ADD: new Set([34])},
             map: {
                 b: {
                     //unexistent: remove(),
@@ -95,4 +98,5 @@ test("update", async() => {
         }
     })
     console.log(updated.set)
+    console.log(updated.set2)
 })
