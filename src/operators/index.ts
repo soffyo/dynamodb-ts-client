@@ -1,26 +1,21 @@
-import { Remove } from "../types"
-import { ConditionalOperator, StringOperator } from "../types"
+import { Remove, UpdateOperator } from "../types"
+import { ConditionalOperator } from "../types"
 
-export const operators: (ConditionalOperator|StringOperator)[] = [
-    "between", 
+export const operators: (ConditionalOperator|UpdateOperator)[] = [
+    "ADD",
+    "DELETE", 
     "BETWEEN", 
     "IN",
-    "in",
-    "contains", 
-    "begins_with", 
-    "size", 
-    "=", 
-    "equal", 
-    "<", 
-    "lesser", 
-    "<=", 
-    "lesser_equal",
-    ">", 
-    "greater",
-    ">=", 
-    "greater_equal",
-    "attribute_exists",
-    "attribute_type"
+    "CONTAINS", 
+    "BEGINS_WITH", 
+    "SIZE", 
+    "EQUAL", 
+    "LESSER",  
+    "LESSER_EQUAL",
+    "GREATER",
+    "GREATER_EQUAL",
+    "ATTRIBUTE_EXISTS",
+    "ATTRIBUTE_TYPE"
 ]
 
 export function remove(): Remove {

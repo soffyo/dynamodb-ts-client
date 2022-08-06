@@ -1,8 +1,8 @@
-# TODO List 02/08/2022
+# TODO List 06/08/2022
 
 - ~~Implement *REMOVE* functionality on update method~~
   - *remove() operator function should not be possible on existing object members of type string.*
-- Implement *ADD* on **update** method
+- ~~Implement *ADD* and *DELETE* on **update** method~~
 - Complete *attribute_type* operator
 - Implement *NOT* operator
 - ~~**Update query method to use latest generator functions.**~~ 

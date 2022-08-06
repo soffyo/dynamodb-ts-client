@@ -1,13 +1,12 @@
-import { ComparisonOperator, ConditionalOperator } from "../types";
+import { QueryOperator, ConditionalOperator } from "../types";
 
-export function convertOperator(key: string): ComparisonOperator | ConditionalOperator {
+export function convertOperator(key: string) {
     switch (key) {
-        case "equal": return "="
-        case "greater": return ">"
-        case "greater_equal": return ">="
-        case "lesser_equal": return "<="
-        case "lesser": return "<"
-        case "between": return "BETWEEN"
-        default: return key as ComparisonOperator | ConditionalOperator
+        case "EQUAL": return "="
+        case "GREATER": return ">"
+        case "GREATER_EQUAL": return ">="
+        case "LESSER_EQUAL": return "<="
+        case "LESSER": return "<"
+        default: return key as QueryOperator | ConditionalOperator
     }
 }

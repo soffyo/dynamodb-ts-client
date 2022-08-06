@@ -1,31 +1,39 @@
-import { ConditionalOperator, StringOperator } from "../types"
+import { ConditionalOperator } from "../types"
 import { convertOperator } from "./operator"
 import { isObject } from "../utilities"
 import { operators } from "../operators"
 
 export function updateExpression(input: Record<string,any>): string {
-    if (!input) {
-        return null
-    }
     const updates: Array<string> = []
+    const adds: Array<string> = []
+    const deletes: Array<string> = []
     const removes: Array<string> = []
     const addPath = (a: string, b: string) => a ? `${a}_dynamoDBSeparator_${b}` : b
     void (function iterate(obj = {}, head = "") {
         Object.entries(obj).reduce((a: any, [key, value]) => {
-            let path = !operators.includes(key as ConditionalOperator|StringOperator) ? addPath(head, key) : head
-            if (isObject(value) && key !== "size") {
-                return iterate(value, path)
+            if (value.ADD) {
+                adds.push(`#${key} :${key}_dynamoDB_ADD`)
+            } else if (value.DELETE) {
+                deletes.push(`DELETE #${key} :${key}_dynamoDB_DELETE`)
             } else {
-                const path_ = path.split("_dynamoDBSeparator_").join(".#")
-                if (value == "__removeDynamoDBAttribute") {
-                    removes.push(`#${path_}`)
+                let path = !operators.includes(key as ConditionalOperator) ? addPath(head, key) : head
+                if (isObject(value) && key !== "SIZE") {
+                    return iterate(value, path)
                 } else {
-                    updates.push(`#${path_} = :${path}`)
+                    const path_ = path.split("_dynamoDBSeparator_").join(".#")
+                    if (value == "__removeDynamoDBAttribute") {
+                        removes.push(`#${path_}`)
+                    } else {
+                        updates.push(`#${path_} = :${path}`)
+                    }
                 }
             }
         }, [])
     })(input)
-    return `SET ${updates.join(', ')} ${removes.length > 0 ? 'REMOVE ' + removes.join(', ') : ""}`
+    const rm = removes.length > 0 ? 'REMOVE ' + removes.join(', ') : ""
+    const add = adds.length > 0 ? 'ADD ' + adds.join(', ') : ""
+    const del = deletes.length > 0 ? deletes.join(' ') : ""
+    return `SET ${updates.join(', ')} ${add} ${del} ${rm}`
 }
 
 export function conditionExpression(obj: Record<string,any>, marker: string = "_condition") {
@@ -33,34 +41,32 @@ export function conditionExpression(obj: Record<string,any>, marker: string = "_
     const addPath = (a: string, b: string) => a ? `${a}_dynamoDBSeparator_${b}` : b
     void (function iterate(obj = {}, head = "") {
         Object.entries(obj).reduce((a: any, [key, value]) => {
-            let path = !operators.includes(key as ConditionalOperator|StringOperator) ? addPath(head, key) : head
-            if (isObject(value) && key !== "size") {
+            let path = !operators.includes(key as ConditionalOperator) ? addPath(head, key) : head
+            if (isObject(value) && key !== "SIZE") {
                 return iterate(value, path)
             } else {
                 key = convertOperator(key)
                 const path_ = path.split("_dynamoDBSeparator_").join(".#")
                 switch (key) {
-                    case "between":
-                    case "BETWEEN": expressions.push(`(#${path_} ${key.toUpperCase()} :${path}1${marker} AND :${path}2${marker})`) 
+                    case "BETWEEN": expressions.push(`(#${path_} BETWEEN :${path}1${marker} AND :${path}2${marker})`) 
                         break
-                    case "in":
                     case "IN":
                         const values = []
                         value.forEach((item, index) => {
                             values.push(`:${path}_${index}_in_${marker}`)
                         })
-                        expressions.push(`(#${path_} ${key.toUpperCase()} (${values.join(", ")}))`)
+                        expressions.push(`(#${path_} IN (${values.join(", ")}))`)
                         break
-                    case "contains":
-                    case "begins_with": expressions.push(`(${key}(#${path_}, :${path}${marker}))`)
+                    case "CONTAINS":
+                    case "BEGINS_WITH": expressions.push(`(${key.toLowerCase()}(#${path_}, :${path}${marker}))`)
                         break
-                    case "size": 
-                        const operator = Object.keys(obj[key])[0]
-                        expressions.push(`(${key}(#${path_} ${operator} :size_dynamoDbOperator)`)
+                    case "SIZE": 
+                        const operator = convertOperator(Object.keys(obj[key])[0])
+                        expressions.push(`(size(#${path_}) ${operator} :${path}_size_dynamoDbOperator)`)
                         break
-                    case "attribute_exists":
+                    case "ATTRIBUTE_EXISTS":
                         if (value) {
-                            expressions.push(`(${key}(#${path_}))`)
+                            expressions.push(`(attribute_exists(#${path_}))`)
                         } else {
                             expressions.push(`(attribute_not_exists(#${path_}))`)
                         }

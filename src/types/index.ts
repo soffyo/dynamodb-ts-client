@@ -1,28 +1,49 @@
 import { ScalarAttributeType, DynamoDBClientConfig, BillingMode, DynamoDBClient } from "@aws-sdk/client-dynamodb"
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb"
-import { PickOnly, ValueOf, RecursivePartial } from "./utility"
 
-export type ComparisonOperator = "=" | "<" | "<=" | ">" | ">=" | "BETWEEN" | "begins_with"  
-export type ConditionalOperator = ComparisonOperator | "attribute_exists" | "attribute_type" | "contains" | "size" | "IN" | "in"
-export type StringOperator = "equal" | "greater" | "lesser" | "greater_equal" | "lesser_equal" | "between"
+//export type ComparisonOperator = "=" | "<" | "<=" | ">" | ">=" | "BETWEEN" | "begins_with"  
+export type QueryOperator = "EQUAL" | "LESSER" | "LESSER_EQUAL" | "GREATER" | "GREATER_EQUAL" | "BETWEEN" | "BEGINS_WITH"  
+export type UpdateOperator =  "ADD" | "DELETE"
+export type ConditionalOperator = QueryOperator | "ATTRIBUTE_EXISTS" | "ATTRIBUTE_TYPE" | "CONTAINS" | "SIZE" | "IN" 
+//export type StringOperator = "equal" | "greater" | "lesser" | "greater_equal" | "lesser_equal" | "between"
 export type Remove = "__removeDynamoDBAttribute"
 
 export type Attributes<T> = {
     [K in keyof T]?: T[K]
 }
 
+type ValueOf<T> = T[keyof T]
+
+type PickOnly<T,K extends keyof T> = Pick<T,K> & {[P in Exclude<keyof T,K>]?: never}
+
+type RecursivePartial<T> = /* {
+    [K in Exclude<any,keyof T>]?: Remove
+} |  */T extends Set<any> ? T | {[K in keyof T]: never } : {
+    [K in keyof T]?: RecursivePartial<T[K]> 
+} 
+
 export type CheckReservedKeys<T> = {
-    [K in keyof T]: CheckReservedKeys<T[K]>
+    [K in keyof T]: CheckReservedKeys<T[K]> 
 } & {
-    [K in (ConditionalOperator|StringOperator)]?: never
+    [K in (ConditionalOperator)]?: never
+}
+
+type Add<T> = {
+    ADD: T extends Set<infer i> ? Set<i> : 
+         T extends number ? number : 
+         never
+}
+
+type Delete<T> = {
+    DELETE: T extends Set<infer i> ? Set<i> : never
 }
 
 export type UpdateInput<T> = {
     update: {
-        [K in keyof T]?: RecursivePartial<T[K]>
-    } | { 
+        [K in keyof T]?: Add<T[K]> | Delete<T[K]> | RecursivePartial<T[K]>
+    } /* | { 
         [K in Exclude<any,keyof T>]?: Remove
-    }
+    } */
 }
 
 export type Keys<T> = ValueOf<{
@@ -42,30 +63,36 @@ export type Query<T> = ValueOf<{
 }>
 
 type Size = ValueOf<{
-    [K in ComparisonOperator]?: {
+    [K in QueryOperator]?: {
         [x in K]-?: number
-    } & { [L in Exclude<ComparisonOperator,K>]?: never }
+    } & { [L in Exclude<QueryOperator,K>]?: never }
 }>
 
 type ComparisonType<T,K> = 
-    T extends "BETWEEN"|"between" ? [K,K] : 
-    T extends "IN"|"in" ? K[] :
-    T extends "begins_with" ? K extends string ? K : never :
-    T extends "contains" ? K extends (infer G)[] ? G : K extends string ? K : never : 
-    T extends "attribute_type" ? "N"|"S" : 
-    T extends "size" ? Size :
-    T extends "attribute_exists" ? boolean :
+    T extends "BETWEEN" ? [K,K] : 
+    T extends "IN" ? K[] :
+    T extends "BEGINS_WITH" ? K extends string ? K : never :
+    T extends "CONTAINS" ? K extends (Array<infer i>|Set<infer i>) ? i : K extends string ? K : never : 
+    T extends "ATTRIBUTE_TYPE" ? "N"|"S" : 
+    T extends "SIZE" ? Size :
+    T extends "ATTRIBUTE_EXISTS" ? boolean :
     K
 
+type Condition<T> = {
+    [K in ConditionalOperator]?: ComparisonType<K,T>
+}
+
 export type ConditionsObject<T> = {
-    [K in keyof T]?: T[K] extends (Exclude<{[k:string]: any}|undefined,any[]>) ? ConditionsObject<T[K]> : {
-        [J in ConditionalOperator|StringOperator]?: ComparisonType<J,T[K]>
-    }
+    [K in keyof T]?: 
+        T[K] extends (any[]|undefined) ? Condition<T[K]> : 
+        T[K] extends (Set<any>|undefined) ? Condition<T[K]> :
+        T[K] extends ({[k:string]:any}|undefined) ? ConditionsObject<T[K]> : 
+        Condition<T[K]>
 }
 
 type QueryConditionsObject<T> = {
     [K in keyof T]?: {
-        [J in ComparisonOperator|StringOperator]?: ComparisonType<J,T[K]>
+        [J in QueryOperator]?: ComparisonType<J,T[K]>
     }
 }
 
