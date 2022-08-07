@@ -38,7 +38,7 @@ test("query", async() => {
     const query = await db.query({ 
         query: { 
             name: "slug", 
-            id: { between: [3,4] },
+            id: { BETWEEN: [3,4] },
         }, 
         ascending: false 
     })

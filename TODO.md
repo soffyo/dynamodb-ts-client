@@ -9,7 +9,6 @@
 - ~~Add *IN* operator~~
 - ~~Add *attribute_exists/attribute_not_exists* to operators~~
 - Implement *OR* in expressions
-- Implement projection expression on supported methods *<-- Investigate if it's needed first*
 - Implement secondary indexes
 - Handle consumed capacity
 - ~~Add javascript errors if comparison operators are used as db objects attributes~~

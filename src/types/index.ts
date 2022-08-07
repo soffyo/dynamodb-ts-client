@@ -23,7 +23,7 @@ type RecursivePartial<T> = /* {
 export type CheckReservedKeys<T> = {
     [K in keyof T]: CheckReservedKeys<T[K]> 
 } & {
-    [K in (ConditionalOperator)]?: never
+    [K in (ConditionalOperator|UpdateOperator)]?: never
 }
 
 type Add<T> = {
@@ -96,11 +96,11 @@ type QueryConditionsObject<T> = {
 
 export interface KeySchema<T> {
     PartitionKey: {
-        Name: keyof T extends string ? keyof T : string
-        Type: ScalarAttributeType
+        Name: ValueOf<{[K in keyof T]: T[K] extends (string|number) ? K : never }>
+        Type: ScalarAttributeType 
     },
     SortKey?: {
-        Name: keyof T extends string ? keyof T : string
+        Name: ValueOf<{[K in keyof T]: T[K] extends (string|number) ? K : never }>
         Type: ScalarAttributeType
     }
 }

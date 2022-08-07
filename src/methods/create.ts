@@ -17,12 +17,12 @@ export async function create<T>({ table, client }: TSClientMethodConfig, { Keys,
 function keySchema<T extends Record<string,any>>(keys: KeySchema<T>): KeySchemaElement[] {
     checkKeySchema(keys)
     let KeySchema: Array<KeySchemaElement> = [{
-        AttributeName: keys.PartitionKey.Name,
+        AttributeName: keys.PartitionKey.Name as string,
         KeyType: "HASH"
     }]    
     if (keys.SortKey) {
         KeySchema.push({
-            AttributeName: keys.SortKey.Name,
+            AttributeName: keys.SortKey.Name as string,
             KeyType: "RANGE"
         })
     }
@@ -31,12 +31,12 @@ function keySchema<T extends Record<string,any>>(keys: KeySchema<T>): KeySchemaE
 
 function attributeDefinitions<T extends Record<string,any>>(keys: KeySchema<T>): [AttributeDefinition, AttributeDefinition?]  {
     let AttributeDefinitions: [AttributeDefinition, AttributeDefinition?] = [{
-        AttributeName: keys.PartitionKey.Name,
+        AttributeName: keys.PartitionKey.Name as string,
         AttributeType: keys.PartitionKey.Type
     }]    
     if (keys.SortKey) {
         AttributeDefinitions.push({
-            AttributeName: keys.SortKey.Name,
+            AttributeName: keys.SortKey.Name as string,
             AttributeType: keys.SortKey.Type
         })
     }
